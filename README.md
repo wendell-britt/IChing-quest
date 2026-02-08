@@ -27,7 +27,16 @@ Steps (Vercel):
 - Framework preset: **Vite**
 - Build command: `npm run build`
 - Output dir: `dist`
+- **Important**: your working app is currently on branch `cursor/i-ching-quest-widget-2953`.
+  - Fastest: in Vercel project settings → **Git** → set **Production Branch** to `cursor/i-ching-quest-widget-2953`
+  - Or: open a PR into `main` and use Vercel’s **Preview Deployment** URL
 - Deploy, then open the generated URL on your iPhone
+
+Steps (Netlify):
+- Add new site → Import from Git
+- Build command: `npm run build`
+- Publish directory: `dist`
+- Deploy, then open the generated HTTPS URL on your iPhone
 
 ### Option B: GitHub Codespaces (live dev, port forwarding)
 
