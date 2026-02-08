@@ -111,7 +111,8 @@ export function mintQuestFromBar(args: {
   const rewardVibeulons = 7 + Math.min(5, bar.movingLines.length) + (seed % 4)
 
   const title = `${STORY_MOMENT_META[storyMoment].label}: ${verb}`
-  const prompt = `Your BAR reads **${bar.hexagram.label}** (${upper.glyph}${lower.glyph}). As the **${archetype.name}**, channel: ${upper.keyword} // ${lower.keyword}.`
+  const caller = bar.playerLabel ? `, ${bar.playerLabel}` : ''
+  const prompt = `Operator${caller}: your BAR reads **${bar.hexagram.label}** (${upper.glyph}${lower.glyph}). As the **${archetype.name}**, channel: ${upper.keyword} // ${lower.keyword}.`
 
   return {
     id: newId('quest'),
