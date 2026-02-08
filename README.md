@@ -13,6 +13,50 @@ npm run dev
 
 Then open the URL printed by Vite (usually `http://localhost:5173`).
 
+## Test on iPhone (Safari)
+
+You need **some computer/server** to run the app and expose it via a URL your phone can reach.
+
+### Option A (easiest): Vercel/Netlify preview URLs
+
+- **What you need**: a Vercel or Netlify account connected to GitHub.
+- **How it works**: every push gets a **public HTTPS URL** you can open on iPhone.
+
+Steps (Vercel):
+- Import the GitHub repo
+- Framework preset: **Vite**
+- Build command: `npm run build`
+- Output dir: `dist`
+- Deploy, then open the generated URL on your iPhone
+
+### Option B: GitHub Codespaces (live dev, port forwarding)
+
+- **What you need**: GitHub Codespaces enabled for your account.
+- **How it works**: run the dev server in Codespaces, then use the **forwarded HTTPS port URL** on iPhone.
+
+Steps:
+- Create/open a Codespace for the repo
+- In the Codespace terminal:
+
+```bash
+npm install
+npm run dev:host
+```
+
+- In “Ports”, set port `5173` to **Public** (or at least reachable), then open the forwarded URL in Safari.
+
+### Option C: Run on your own machine + tunnel (ngrok / Cloudflare Tunnel)
+
+- **What you need**: a laptop/desktop running the dev server + a tunneling tool.
+- Run:
+
+```bash
+npm install
+npm run dev:host
+```
+
+- Then expose `5173` using your tunnel provider and open the HTTPS link on iPhone.
+
 ## What’s implemented (MVP)
 
 - **Draw Hexagram → BAR**: 3-coin method simulated; moving lines glow.
