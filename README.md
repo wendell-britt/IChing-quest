@@ -32,6 +32,14 @@ Steps (Vercel):
   - Or: open a PR into `main` and use Vercel’s **Preview Deployment** URL
 - Deploy, then open the generated URL on your iPhone
 
+If Vercel deploy is failing:
+- In Vercel → Project → **Deployments** → open the latest failed deployment → **View Build Logs**
+- Common fixes:
+  - **Node version**: set Node to **20.x** in Vercel project settings (this repo includes `.nvmrc` = 20)
+  - **Root Directory**: ensure it’s the repo root (where `package.json` lives)
+  - **Build/Output**: `npm run build` and `dist`
+  - If you imported the repo before the branch existed, hit **Redeploy** after refreshing the Git connection
+
 Steps (Netlify):
 - Add new site → Import from Git
 - Build command: `npm run build`

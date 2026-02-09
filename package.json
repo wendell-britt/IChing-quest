@@ -19,6 +19,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=18.18.0"
+  },
   "bugs": {
     "url": "https://github.com/wendell-britt/IChing-quest/issues"
   },
