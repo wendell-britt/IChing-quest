@@ -17,6 +17,18 @@ Then open the URL printed by Vite (usually `http://localhost:5173`).
 
 You need **some computer/server** to run the app and expose it via a URL your phone can reach.
 
+### Option A0 (no extra services): GitHub Pages (recommended)
+
+- **What you need**: GitHub repo admin access to enable Pages once.
+- **How it works**: GitHub Actions builds the app and publishes it to Pages as a public HTTPS site.
+
+Steps:
+- In GitHub: repo → **Settings → Pages**
+- Under “Build and deployment” set **Source** to **GitHub Actions**
+- Then go to **Actions** → run “Deploy to GitHub Pages” (or just push a commit)
+- Your iPhone link will be:
+  - `https://<your-username>.github.io/IChing-quest/`
+
 ### Option A (easiest): Vercel/Netlify preview URLs
 
 - **What you need**: a Vercel or Netlify account connected to GitHub.
