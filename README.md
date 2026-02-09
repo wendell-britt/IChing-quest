@@ -29,6 +29,9 @@ Steps:
 - Your iPhone link will be:
   - `https://<your-username>.github.io/IChing-quest/`
 
+Once enabled for this repo, the expected URL is:
+- `https://wendell-britt.github.io/IChing-quest/`
+
 ### Option A (easiest): Vercel/Netlify preview URLs
 
 - **What you need**: a Vercel or Netlify account connected to GitHub.
