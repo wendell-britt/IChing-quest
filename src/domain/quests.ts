@@ -1,6 +1,7 @@
-import type { BAR, QUEST, StoryMoment } from './types'
+import type { BAR, MiniGameMode, MoveType, QUEST, StoryMoment } from './types'
 import { ARCHETYPES } from './archetypes'
 import { TRIGRAMS } from './trigrams'
+import { moveTypeForStoryMoment } from './moves'
 import { newId } from './util'
 
 export const STORY_MOMENT_META: Record<
@@ -74,32 +75,165 @@ function pick<T>(arr: readonly T[], seed: number): T {
   return arr[seed % arr.length]!
 }
 
-const STEP_BANK = {
-  observe: [
-    'Locate a sign, label, or product that feels “out of place.”',
-    'Find a color that repeats 3 times in your environment.',
-    'Listen for a phrase you weren’t meant to hear.',
-    'Identify the loudest object in the room (not person).',
-  ],
-  interact: [
-    'Ask a stranger: “What aisle are we in emotionally?”',
-    'Trade a small object for a story fragment (one sentence).',
-    'Offer a compliment that sounds like a prophecy.',
-    'Invite someone to witness the artifact for 10 seconds.',
-  ],
-  enact: [
-    'Perform a 5-second ritual gesture and name it.',
-    'Walk a tiny loop and return with new posture.',
-    'Touch a wall/floor and declare it “calibrated.”',
-    'Choose a direction and take exactly 8 steps.',
-  ],
-  document: [
-    'Record the result as a single weird headline.',
-    'Write down 3 words you want the party to remember.',
-    'Take a photo of a texture that matches your mood.',
-    'Sketch a symbol that explains what just happened.',
-  ],
-} as const
+type MinigameTemplate = {
+  id: string
+  storyMoment: StoryMoment
+  moveType: MoveType
+  mode: MiniGameMode
+  durationSeconds: number
+  title: (verb: string) => string
+  setup: string[]
+  rules: (ctx: {
+    archetypeName: string
+    upperKeyword: string
+    lowerKeyword: string
+    movingLines: number
+  }) => string[]
+  winCondition: string
+  scoring: string[]
+  rewardBase: number
+}
+
+// Mario-Party-ish minigame templates keyed by Kotter stage + move type.
+const TEMPLATES: MinigameTemplate[] = [
+  {
+    id: 'urgency_signal_sprint',
+    storyMoment: 'URGENCY',
+    moveType: 'WAKE_UP',
+    mode: 'FREE_FOR_ALL',
+    durationSeconds: 60,
+    title: (verb) => `1 · Create Urgency: ${verb} Signal Sprint`,
+    setup: ['Everyone stands in a circle.', 'Pick ONE “signal” word for the room (ex: “AISLE”).'],
+    rules: ({ movingLines }) => [
+      'For 60 seconds, anyone can point to an object and shout the signal word.',
+      'The next player must name a DIFFERENT object that matches the vibe of the first object (no repeats).',
+      `If someone hesitates >3 seconds, they lose 1 point.${movingLines >= 3 ? ' Moving lines: the signal word changes once at 30 seconds.' : ''}`,
+    ],
+    winCondition: 'Highest points at the buzzer.',
+    scoring: ['+1 point for a valid match', '-1 point for hesitation', '-1 point for repeating an object'],
+    rewardBase: 8,
+  },
+  {
+    id: 'coalition_handshake_protocol',
+    storyMoment: 'COALITION',
+    moveType: 'WAKE_UP',
+    mode: 'WHOLE_ROOM',
+    durationSeconds: 180,
+    title: (verb) => `2 · Build Coalition: ${verb} Handshake Protocol`,
+    setup: ['Each player chooses a 2-word codename.', 'Set a 3-minute timer.'],
+    rules: ({ archetypeName }) => [
+      `You are the ${archetypeName}: walk the room and “recruit” by learning codenames.`,
+      'When you learn someone’s codename, you must teach them a gesture (a tiny “handshake”).',
+      'A coalition is formed when 3 people can correctly perform each other’s gestures.',
+    ],
+    winCondition: 'Form the most coalitions before time ends.',
+    scoring: ['+3 points per coalition of 3', '+1 bonus if a coalition includes someone you met for the first time tonight'],
+    rewardBase: 9,
+  },
+  {
+    id: 'vision_map_the_night',
+    storyMoment: 'VISION',
+    moveType: 'GROW_UP',
+    mode: 'TEAMS',
+    durationSeconds: 240,
+    title: (verb) => `3 · Form Vision: ${verb} Map the Night`,
+    setup: ['Split into 2 teams.', 'Each team gets one phone note or scrap paper.'],
+    rules: ({ upperKeyword, lowerKeyword }) => [
+      `Team A must describe the party’s “upper world” using: ${upperKeyword}.`,
+      `Team B must describe the party’s “lower world” using: ${lowerKeyword}.`,
+      'In 4 minutes, each team writes a 6-word “vision slogan”.',
+      'Then swap slogans and improve the other team’s slogan by changing exactly 2 words.',
+    ],
+    winCondition: 'Loudest crowd vote wins (clap/cheer).',
+    scoring: ['Winning team: +5 points each', 'Other team: +2 points each (for participating)'],
+    rewardBase: 10,
+  },
+  {
+    id: 'enlist_contagious_dare',
+    storyMoment: 'ENLIST',
+    moveType: 'GROW_UP',
+    mode: 'ONE_VS_MANY',
+    durationSeconds: 120,
+    title: (verb) => `4 · Enlist the Many: ${verb} Contagious Dare`,
+    setup: ['Choose 1 Enlister.', 'Set a 2-minute timer.'],
+    rules: ({ movingLines }) => [
+      'Enlister invents a tiny, safe, non-embarrassing dare (5 seconds).',
+      'Goal: get as many different people as possible to do it once.',
+      `If moving lines ≥ 2: after 60 seconds, the dare must “evolve” (add one extra rule).`,
+    ],
+    winCondition: 'Most participants recruited before time ends.',
+    scoring: ['+1 point per unique participant', '+2 bonus if a participant recruits someone else (chain)'],
+    rewardBase: 11,
+  },
+  {
+    id: 'unblock_bouncer_rule',
+    storyMoment: 'UNBLOCK',
+    moveType: 'CLEAN_UP',
+    mode: 'WHOLE_ROOM',
+    durationSeconds: 180,
+    title: (verb) => `5 · Remove Barriers: ${verb} The Bouncer Rule`,
+    setup: ['Pick 1 “Bouncer”.', 'Pick 1 “Door” (a spot in the room).', 'Set a 3-minute timer.'],
+    rules: () => [
+      'The Bouncer invents a silly barrier rule (ex: “You may only approach the Door while humming”).',
+      'Everyone must reach the Door and touch it while obeying the barrier rule.',
+      'After 60 seconds, anyone who has reached the Door may propose a “workaround” rule.',
+    ],
+    winCondition: 'Everyone succeeds at least once before time ends.',
+    scoring: ['Group win: +3 points each', 'If group fails: Bouncer gets +3 (for being the obstacle)'],
+    rewardBase: 10,
+  },
+  {
+    id: 'wins_receipt_hunt',
+    storyMoment: 'WINS',
+    moveType: 'CLEAN_UP',
+    mode: 'FREE_FOR_ALL',
+    durationSeconds: 90,
+    title: (verb) => `6 · Short-Term Wins: ${verb} Receipt Hunt`,
+    setup: ['Choose a judge/witness.', 'Set a 90-second timer.'],
+    rules: ({ upperKeyword, lowerKeyword }) => [
+      `Find “proof” of the party’s direction: one object/person/moment that matches ${upperKeyword} AND ${lowerKeyword}.`,
+      'Bring it to the witness and state your claim in one sentence.',
+      'Witness must respond “VALID” or “DENIED” immediately.',
+    ],
+    winCondition: 'Most VALID receipts.',
+    scoring: ['+2 points per VALID receipt', '-1 for DENIED claims', '+1 bonus for making the witness laugh'],
+    rewardBase: 12,
+  },
+  {
+    id: 'accelerate_rule_stack',
+    storyMoment: 'ACCELERATE',
+    moveType: 'SHOW_UP',
+    mode: 'WHOLE_ROOM',
+    durationSeconds: 180,
+    title: (verb) => `7 · Sustain Acceleration: ${verb} Rule Stack`,
+    setup: ['Everyone in a circle.', 'Set a 3-minute timer.'],
+    rules: ({ movingLines }) => [
+      'Start a simple loop (ex: say your name + a gesture).',
+      'Every 20 seconds, add a new rule (speed up, reverse order, whisper, etc.).',
+      `Moving lines: add ${Math.min(3, Math.max(1, movingLines))} extra rules total.`,
+    ],
+    winCondition: 'Last person to break the loop wins.',
+    scoring: ['Winner: +8 points', 'Everyone else: +2 points (for surviving as long as possible)'],
+    rewardBase: 13,
+  },
+  {
+    id: 'anchor_culture_stamp',
+    storyMoment: 'ANCHOR',
+    moveType: 'SHOW_UP',
+    mode: 'COOP',
+    durationSeconds: 240,
+    title: (verb) => `8 · Anchor the Change: ${verb} Culture Stamp`,
+    setup: ['Choose a place for a “micro-shrine” (table corner / wall).', 'Set a 4-minute timer.'],
+    rules: () => [
+      'As a group, invent a 1-sentence myth about tonight.',
+      'Create a “stamp”: a gesture + a sound (2 seconds total).',
+      'Teach the stamp to at least 3 other people who were not in the group.',
+    ],
+    winCondition: '3 outsiders can perform the stamp correctly.',
+    scoring: ['Group success: +5 points each', 'If an outsider teaches a fourth: +2 bonus each'],
+    rewardBase: 14,
+  },
+]
 
 export function mintQuestFromBar(args: {
   bar: BAR
@@ -113,16 +247,20 @@ export function mintQuestFromBar(args: {
 
   const seed = hashToInt(`${bar.id}:${archetypeId}:${storyMoment}:${bar.hexagram.bits}`)
   const verb = pick(STORY_MOMENT_META[storyMoment].verbs, seed)
-  const steps = [
-    pick(STEP_BANK.observe, seed + 1),
-    pick(STEP_BANK.interact, seed + 2),
-    pick(STEP_BANK.enact, seed + 3),
-    pick(STEP_BANK.document, seed + 4),
-  ]
+  const moveType = moveTypeForStoryMoment(storyMoment)
+  const candidates = TEMPLATES.filter((t) => t.storyMoment === storyMoment && t.moveType === moveType)
+  const template = pick(candidates.length ? candidates : TEMPLATES, seed)
 
-  const rewardVibeulons = 7 + Math.min(5, bar.movingLines.length) + (seed % 4)
+  const steps = template.rules({
+    archetypeName: archetype.name,
+    upperKeyword: upper.keyword,
+    lowerKeyword: lower.keyword,
+    movingLines: bar.movingLines.length,
+  })
 
-  const title = `${STORY_MOMENT_META[storyMoment].label}: ${verb}`
+  const rewardVibeulons = template.rewardBase + Math.min(6, bar.movingLines.length) + (seed % 3)
+
+  const title = template.title(verb)
   const caller = bar.playerLabel ? `, ${bar.playerLabel}` : ''
   const prompt = `Operator${caller}: your BAR reads **${bar.hexagram.label}** (${upper.glyph}${lower.glyph}). As the **${archetype.name}**, channel: ${upper.keyword} // ${lower.keyword}.`
 
@@ -132,9 +270,15 @@ export function mintQuestFromBar(args: {
     barId: bar.id,
     archetypeId: archetype.id,
     storyMoment,
+    moveType,
     title,
     prompt,
     steps,
+    mode: template.mode,
+    durationSeconds: template.durationSeconds,
+    setup: template.setup,
+    winCondition: template.winCondition,
+    scoring: template.scoring,
     rewardVibeulons,
   }
 }

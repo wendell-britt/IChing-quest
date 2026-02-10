@@ -16,6 +16,18 @@ export type StoryMoment =
   | 'ACCELERATE'
   | 'ANCHOR'
 
+// 4 move types in the larger meta-game
+export type MoveType = 'WAKE_UP' | 'CLEAN_UP' | 'GROW_UP' | 'SHOW_UP'
+
+export type MiniGameMode =
+  | 'SOLO'
+  | 'DUO'
+  | 'FREE_FOR_ALL'
+  | 'TEAMS'
+  | 'ONE_VS_MANY'
+  | 'WHOLE_ROOM'
+  | 'COOP'
+
 export interface Trigram {
   id: TrigramId
   name: string
@@ -68,9 +80,16 @@ export interface QUEST {
   barId: string
   archetypeId: string
   storyMoment: StoryMoment
+  moveType?: MoveType
   title: string
   prompt: string
+  // Back-compat: old quests are just "steps". New quests can also include a structured minigame spec.
   steps: string[]
+  mode?: MiniGameMode
+  durationSeconds?: number
+  setup?: string[]
+  winCondition?: string
+  scoring?: string[]
   rewardVibeulons: number
   redeemedAt?: number
 }

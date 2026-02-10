@@ -7,6 +7,7 @@ import { STORY_MOMENT_META, STORY_MOMENTS, mintQuestFromBar } from './domain/que
 import { HexagramGlyph } from './components/HexagramGlyph'
 import { formatShortTime } from './domain/util'
 import { TRIGRAMS } from './domain/trigrams'
+import { MOVE_TYPE_META, moveTypeForStoryMoment } from './domain/moves'
 
 export default function App() {
   const [state, setState] = useState<ArtifactStateV1>(() => loadState())
@@ -278,6 +279,17 @@ export default function App() {
                 })}
               </div>
               <div className="mt-3 text-xs text-white/60">{STORY_MOMENT_META[storyMoment].hint}</div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/75">
+                  Move Type:{' '}
+                  <span className="font-semibold text-white/90">
+                    {MOVE_TYPE_META[moveTypeForStoryMoment(storyMoment)].label}
+                  </span>
+                </div>
+                <div className="text-xs text-white/55">
+                  {MOVE_TYPE_META[moveTypeForStoryMoment(storyMoment)].flavor}
+                </div>
+              </div>
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -295,7 +307,7 @@ export default function App() {
                 Mint QUEST
               </button>
               <div className="text-xs text-white/60">
-                Uses hexagram + trigram archetype + story moment to output an actionable quest.
+                Uses hexagram + archetype + party period to output a Mario-Party-ish minigame.
               </div>
             </div>
 
@@ -345,6 +357,24 @@ export default function App() {
                   <div>
                     <div className="text-sm font-semibold text-white/90">{selectedQuest.title}</div>
                     <div className="mt-1 text-xs text-white/60">Redeem for vibeulons when complete.</div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {selectedQuest.moveType ? (
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/75">
+                          {MOVE_TYPE_META[selectedQuest.moveType].label}
+                        </span>
+                      ) : null}
+                      {selectedQuest.mode ? (
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/75">
+                          Mode: {selectedQuest.mode.replaceAll('_', ' ')}
+                        </span>
+                      ) : null}
+                      {typeof selectedQuest.durationSeconds === 'number' ? (
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/75">
+                          Timer: {Math.round(selectedQuest.durationSeconds / 60)}m
+                          {selectedQuest.durationSeconds % 60 ? ` ${selectedQuest.durationSeconds % 60}s` : ''}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -373,11 +403,43 @@ export default function App() {
                   )}
                 </div>
 
-                <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-white/80">
-                  {selectedQuest.steps.map((s, i) => (
-                    <li key={i}>{s}</li>
-                  ))}
-                </ol>
+                {selectedQuest.setup?.length ? (
+                  <div className="mt-4">
+                    <div className="text-xs uppercase tracking-[0.26em] text-white/50">Setup</div>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-white/80">
+                      {selectedQuest.setup.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
+                <div className="mt-4">
+                  <div className="text-xs uppercase tracking-[0.26em] text-white/50">Rules</div>
+                  <ol className="mt-2 list-decimal space-y-2 pl-5 text-sm text-white/80">
+                    {selectedQuest.steps.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ol>
+                </div>
+
+                {selectedQuest.winCondition ? (
+                  <div className="mt-4">
+                    <div className="text-xs uppercase tracking-[0.26em] text-white/50">Win condition</div>
+                    <div className="mt-2 text-sm text-white/80">{selectedQuest.winCondition}</div>
+                  </div>
+                ) : null}
+
+                {selectedQuest.scoring?.length ? (
+                  <div className="mt-4">
+                    <div className="text-xs uppercase tracking-[0.26em] text-white/50">Scoring</div>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-white/80">
+                      {selectedQuest.scoring.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
             ) : (
               <div className="mt-5 rounded-xl border border-white/10 bg-black/30 p-4 text-sm text-white/60">
