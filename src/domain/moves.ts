@@ -9,19 +9,45 @@ export const MOVE_TYPE_META: Record<MoveType, { label: string; flavor: string }>
   SHOW_UP: { label: 'Show up', flavor: 'Performance, proof, embodiment, cultural imprint.' },
 }
 
-// Default alignment: 8 Kotter stages → 4 move types (pairs)
-export const STORY_MOMENT_TO_MOVE_TYPE: Record<StoryMoment, MoveType> = {
-  URGENCY: 'WAKE_UP',
-  COALITION: 'WAKE_UP',
-  VISION: 'GROW_UP',
-  ENLIST: 'GROW_UP',
-  UNBLOCK: 'CLEAN_UP',
-  WINS: 'CLEAN_UP',
-  ACCELERATE: 'SHOW_UP',
-  ANCHOR: 'SHOW_UP',
+export const DEFAULT_MOVE_TYPE: MoveType = 'WAKE_UP'
+
+// Optional: move-type modifiers can be applied to any Kotter stage + archetype combo.
+export const MOVE_TYPE_MODIFIERS: Record<
+  MoveType,
+  {
+    addRulePrefix: string
+    addRuleSuffix?: string
+    rewardBonus: number
+    durationDeltaSeconds: number
+  }
+> = {
+  WAKE_UP: {
+    addRulePrefix: 'Wake up modifier:',
+    addRuleSuffix: 'Make it loud, fast, and obvious.',
+    rewardBonus: 0,
+    durationDeltaSeconds: -10,
+  },
+  CLEAN_UP: {
+    addRulePrefix: 'Clean up modifier:',
+    addRuleSuffix: 'Remove one barrier. Simplify one rule.',
+    rewardBonus: 1,
+    durationDeltaSeconds: 0,
+  },
+  GROW_UP: {
+    addRulePrefix: 'Grow up modifier:',
+    addRuleSuffix: 'Add one skill constraint (precision, memory, coordination).',
+    rewardBonus: 2,
+    durationDeltaSeconds: 15,
+  },
+  SHOW_UP: {
+    addRulePrefix: 'Show up modifier:',
+    addRuleSuffix: 'Add a witness/judge and make the outcome public.',
+    rewardBonus: 3,
+    durationDeltaSeconds: 0,
+  },
 }
 
-export function moveTypeForStoryMoment(storyMoment: StoryMoment): MoveType {
-  return STORY_MOMENT_TO_MOVE_TYPE[storyMoment]
+export function clampDurationSeconds(n: number): number {
+  return Math.max(30, Math.min(600, Math.round(n)))
 }
 

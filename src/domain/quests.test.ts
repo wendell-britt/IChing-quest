@@ -21,8 +21,13 @@ describe('quests minigames', () => {
       playerLabel: 'MOTH-17',
     }
 
-    const q = mintQuestFromBar({ bar, archetypeId: 'THUNDER_RUNNER', storyMoment: 'URGENCY' })
-    expect(q.moveType).toBe('WAKE_UP')
+    const q = mintQuestFromBar({
+      bar,
+      archetypeId: 'THUNDER_RUNNER',
+      storyMoment: 'URGENCY',
+      moveType: 'CLEAN_UP',
+    })
+    expect(q.moveType).toBe('CLEAN_UP')
     expect(q.mode).toBeTruthy()
     expect(typeof q.durationSeconds).toBe('number')
     expect(Array.isArray(q.setup)).toBe(true)

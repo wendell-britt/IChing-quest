@@ -7,7 +7,8 @@ import { STORY_MOMENT_META, STORY_MOMENTS, mintQuestFromBar } from './domain/que
 import { HexagramGlyph } from './components/HexagramGlyph'
 import { formatShortTime } from './domain/util'
 import { TRIGRAMS } from './domain/trigrams'
-import { MOVE_TYPE_META, moveTypeForStoryMoment } from './domain/moves'
+import { DEFAULT_MOVE_TYPE, MOVE_TYPE_META, MOVE_TYPES } from './domain/moves'
+import { trigramForKotterStage } from './domain/kotter'
 
 export default function App() {
   const [state, setState] = useState<ArtifactStateV1>(() => loadState())
@@ -28,6 +29,7 @@ export default function App() {
     return b ? archetypeForTrigram(b.hexagram.lower).id : ARCHETYPE_LIST[0]!.id
   })
   const [storyMoment, setStoryMoment] = useState<StoryMoment>('URGENCY')
+  const [moveType, setMoveType] = useState(() => DEFAULT_MOVE_TYPE)
 
   useEffect(() => {
     saveState(state)
@@ -48,7 +50,7 @@ export default function App() {
 
   function mintQuest() {
     if (!selectedBar) return
-    const quest = mintQuestFromBar({ bar: selectedBar, archetypeId, storyMoment })
+    const quest = mintQuestFromBar({ bar: selectedBar, archetypeId, storyMoment, moveType })
     setState((s) => ({ ...s, quests: [quest, ...s.quests] }))
     setSelectedQuestId(quest.id)
   }
@@ -281,15 +283,39 @@ export default function App() {
               <div className="mt-3 text-xs text-white/60">{STORY_MOMENT_META[storyMoment].hint}</div>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/75">
-                  Move Type:{' '}
+                  Kotter trigram anchor:{' '}
                   <span className="font-semibold text-white/90">
-                    {MOVE_TYPE_META[moveTypeForStoryMoment(storyMoment)].label}
+                    {TRIGRAMS[trigramForKotterStage(storyMoment)].glyph}{' '}
+                    {TRIGRAMS[trigramForKotterStage(storyMoment)].name}
                   </span>
                 </div>
-                <div className="text-xs text-white/55">
-                  {MOVE_TYPE_META[moveTypeForStoryMoment(storyMoment)].flavor}
-                </div>
               </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-white/10 bg-black/30 p-4">
+              <div className="text-xs uppercase tracking-[0.26em] text-white/50">Move Type</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {MOVE_TYPES.map((m) => {
+                  const active = m === moveType
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setMoveType(m)}
+                      className={
+                        'rounded-full border px-3 py-1 text-xs transition-colors ' +
+                        (active
+                          ? 'border-emerald-300/60 bg-emerald-400/15 text-emerald-100'
+                          : 'border-white/10 bg-white/5 text-white/75 hover:bg-white/10')
+                      }
+                      title={MOVE_TYPE_META[m].flavor}
+                    >
+                      {MOVE_TYPE_META[m].label}
+                    </button>
+                  )
+                })}
+              </div>
+              <div className="mt-3 text-xs text-white/60">{MOVE_TYPE_META[moveType].flavor}</div>
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">

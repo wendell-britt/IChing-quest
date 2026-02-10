@@ -1,7 +1,8 @@
 import type { BAR, MiniGameMode, MoveType, QUEST, StoryMoment } from './types'
 import { ARCHETYPES } from './archetypes'
 import { TRIGRAMS } from './trigrams'
-import { moveTypeForStoryMoment } from './moves'
+import { clampDurationSeconds, DEFAULT_MOVE_TYPE, MOVE_TYPE_MODIFIERS } from './moves'
+import { trigramForKotterStage } from './kotter'
 import { newId } from './util'
 
 export const STORY_MOMENT_META: Record<
@@ -78,7 +79,6 @@ function pick<T>(arr: readonly T[], seed: number): T {
 type MinigameTemplate = {
   id: string
   storyMoment: StoryMoment
-  moveType: MoveType
   mode: MiniGameMode
   durationSeconds: number
   title: (verb: string) => string
@@ -94,12 +94,11 @@ type MinigameTemplate = {
   rewardBase: number
 }
 
-// Mario-Party-ish minigame templates keyed by Kotter stage + move type.
+// Mario-Party-ish minigame templates keyed by Kotter stage.
 const TEMPLATES: MinigameTemplate[] = [
   {
     id: 'urgency_signal_sprint',
     storyMoment: 'URGENCY',
-    moveType: 'WAKE_UP',
     mode: 'FREE_FOR_ALL',
     durationSeconds: 60,
     title: (verb) => `1 · Create Urgency: ${verb} Signal Sprint`,
@@ -116,7 +115,6 @@ const TEMPLATES: MinigameTemplate[] = [
   {
     id: 'coalition_handshake_protocol',
     storyMoment: 'COALITION',
-    moveType: 'WAKE_UP',
     mode: 'WHOLE_ROOM',
     durationSeconds: 180,
     title: (verb) => `2 · Build Coalition: ${verb} Handshake Protocol`,
@@ -133,7 +131,6 @@ const TEMPLATES: MinigameTemplate[] = [
   {
     id: 'vision_map_the_night',
     storyMoment: 'VISION',
-    moveType: 'GROW_UP',
     mode: 'TEAMS',
     durationSeconds: 240,
     title: (verb) => `3 · Form Vision: ${verb} Map the Night`,
@@ -151,7 +148,6 @@ const TEMPLATES: MinigameTemplate[] = [
   {
     id: 'enlist_contagious_dare',
     storyMoment: 'ENLIST',
-    moveType: 'GROW_UP',
     mode: 'ONE_VS_MANY',
     durationSeconds: 120,
     title: (verb) => `4 · Enlist the Many: ${verb} Contagious Dare`,
@@ -168,7 +164,6 @@ const TEMPLATES: MinigameTemplate[] = [
   {
     id: 'unblock_bouncer_rule',
     storyMoment: 'UNBLOCK',
-    moveType: 'CLEAN_UP',
     mode: 'WHOLE_ROOM',
     durationSeconds: 180,
     title: (verb) => `5 · Remove Barriers: ${verb} The Bouncer Rule`,
@@ -185,7 +180,6 @@ const TEMPLATES: MinigameTemplate[] = [
   {
     id: 'wins_receipt_hunt',
     storyMoment: 'WINS',
-    moveType: 'CLEAN_UP',
     mode: 'FREE_FOR_ALL',
     durationSeconds: 90,
     title: (verb) => `6 · Short-Term Wins: ${verb} Receipt Hunt`,
@@ -202,7 +196,6 @@ const TEMPLATES: MinigameTemplate[] = [
   {
     id: 'accelerate_rule_stack',
     storyMoment: 'ACCELERATE',
-    moveType: 'SHOW_UP',
     mode: 'WHOLE_ROOM',
     durationSeconds: 180,
     title: (verb) => `7 · Sustain Acceleration: ${verb} Rule Stack`,
@@ -219,7 +212,6 @@ const TEMPLATES: MinigameTemplate[] = [
   {
     id: 'anchor_culture_stamp',
     storyMoment: 'ANCHOR',
-    moveType: 'SHOW_UP',
     mode: 'COOP',
     durationSeconds: 240,
     title: (verb) => `8 · Anchor the Change: ${verb} Culture Stamp`,
@@ -239,17 +231,20 @@ export function mintQuestFromBar(args: {
   bar: BAR
   archetypeId: string
   storyMoment: StoryMoment
+  moveType?: MoveType
 }): QUEST {
   const { bar, archetypeId, storyMoment } = args
   const archetype = ARCHETYPES[archetypeId] ?? Object.values(ARCHETYPES)[0]!
   const upper = TRIGRAMS[bar.hexagram.upper]
   const lower = TRIGRAMS[bar.hexagram.lower]
+  const stageTrigram = TRIGRAMS[trigramForKotterStage(storyMoment)]
 
-  const seed = hashToInt(`${bar.id}:${archetypeId}:${storyMoment}:${bar.hexagram.bits}`)
+  const moveType: MoveType = args.moveType ?? DEFAULT_MOVE_TYPE
+  const seed = hashToInt(`${bar.id}:${archetypeId}:${storyMoment}:${moveType}:${bar.hexagram.bits}`)
   const verb = pick(STORY_MOMENT_META[storyMoment].verbs, seed)
-  const moveType = moveTypeForStoryMoment(storyMoment)
-  const candidates = TEMPLATES.filter((t) => t.storyMoment === storyMoment && t.moveType === moveType)
+  const candidates = TEMPLATES.filter((t) => t.storyMoment === storyMoment)
   const template = pick(candidates.length ? candidates : TEMPLATES, seed)
+  const mod = MOVE_TYPE_MODIFIERS[moveType]
 
   const steps = template.rules({
     archetypeName: archetype.name,
@@ -257,12 +252,20 @@ export function mintQuestFromBar(args: {
     lowerKeyword: lower.keyword,
     movingLines: bar.movingLines.length,
   })
+  const modifiedSteps = [
+    ...steps,
+    `${mod.addRulePrefix} ${mod.addRuleSuffix ?? ''}`.trim(),
+  ]
 
-  const rewardVibeulons = template.rewardBase + Math.min(6, bar.movingLines.length) + (seed % 3)
+  const rewardVibeulons =
+    template.rewardBase +
+    mod.rewardBonus +
+    Math.min(6, bar.movingLines.length) +
+    (seed % 3)
 
   const title = template.title(verb)
   const caller = bar.playerLabel ? `, ${bar.playerLabel}` : ''
-  const prompt = `Operator${caller}: your BAR reads **${bar.hexagram.label}** (${upper.glyph}${lower.glyph}). As the **${archetype.name}**, channel: ${upper.keyword} // ${lower.keyword}.`
+  const prompt = `Operator${caller}: your BAR reads **${bar.hexagram.label}** (${upper.glyph}${lower.glyph}). Kotter anchor: ${stageTrigram.glyph} ${stageTrigram.name}. As the **${archetype.name}**, channel: ${upper.keyword} // ${lower.keyword}.`
 
   return {
     id: newId('quest'),
@@ -273,9 +276,9 @@ export function mintQuestFromBar(args: {
     moveType,
     title,
     prompt,
-    steps,
+    steps: modifiedSteps,
     mode: template.mode,
-    durationSeconds: template.durationSeconds,
+    durationSeconds: clampDurationSeconds(template.durationSeconds + mod.durationDeltaSeconds),
     setup: template.setup,
     winCondition: template.winCondition,
     scoring: template.scoring,
