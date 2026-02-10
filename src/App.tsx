@@ -26,7 +26,7 @@ export default function App() {
     const b = state.bars[0]
     return b ? archetypeForTrigram(b.hexagram.lower).id : ARCHETYPE_LIST[0]!.id
   })
-  const [storyMoment, setStoryMoment] = useState<StoryMoment>('ARRIVAL')
+  const [storyMoment, setStoryMoment] = useState<StoryMoment>('URGENCY')
 
   useEffect(() => {
     saveState(state)
@@ -77,7 +77,7 @@ export default function App() {
     setSelectedBarId(null)
     setSelectedQuestId(null)
     setArchetypeId(ARCHETYPE_LIST[0]!.id)
-    setStoryMoment('ARRIVAL')
+    setStoryMoment('URGENCY')
   }
 
   return (

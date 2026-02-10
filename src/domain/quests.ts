@@ -7,45 +7,57 @@ export const STORY_MOMENT_META: Record<
   StoryMoment,
   { label: string; hint: string; verbs: string[] }
 > = {
-  ARRIVAL: {
-    label: 'Arrival',
-    hint: 'You just got here. The artifact wakes up.',
-    verbs: ['Boot', 'Initialize', 'Enter', 'Check-in', 'Wake'],
+  URGENCY: {
+    label: '1 · Create Urgency',
+    hint: 'The party needs a direction. Name the now.',
+    verbs: ['Ignite', 'Notice', 'Wake', 'Declare', 'Escalate'],
   },
-  CROSSROADS: {
-    label: 'Crossroads',
-    hint: 'Two doors, one mood. Choose deliberately.',
-    verbs: ['Choose', 'Commit', 'Branch', 'Decide', 'Pivot'],
+  COALITION: {
+    label: '2 · Build Coalition',
+    hint: 'Find allies. Form the temporary committee of destiny.',
+    verbs: ['Gather', 'Link', 'Recruit', 'Convene', 'Assemble'],
   },
-  ENCOUNTER: {
-    label: 'Encounter',
-    hint: 'A person or object becomes a portal.',
-    verbs: ['Meet', 'Trade', 'Approach', 'Signal', 'Recruit'],
+  VISION: {
+    label: '3 · Form Vision',
+    hint: 'Give the night a shape. Sketch the impossible diagram.',
+    verbs: ['Envision', 'Draft', 'Map', 'Design', 'Name'],
   },
-  REVELATION: {
-    label: 'Revelation',
-    hint: 'The label is wrong. That’s the point.',
-    verbs: ['Reveal', 'Decode', 'Unmask', 'Audit', 'Interpret'],
+  ENLIST: {
+    label: '4 · Enlist the Many',
+    hint: 'Make it contagious. Translate the vision into a dare.',
+    verbs: ['Broadcast', 'Invite', 'Signal', 'Rally', 'Enlist'],
   },
-  RITUAL: {
-    label: 'Ritual',
-    hint: 'Repeat something until it turns into meaning.',
-    verbs: ['Perform', 'Loop', 'Consecrate', 'Synchronize', 'Chant'],
+  UNBLOCK: {
+    label: '5 · Remove Barriers',
+    hint: 'Clear a path. Turn “can’t” into a door handle.',
+    verbs: ['Unblock', 'Unlock', 'Clear', 'Bypass', 'Enable'],
   },
-  EXIT: {
-    label: 'Exit',
-    hint: 'Close the loop without closing your heart.',
-    verbs: ['Seal', 'Archive', 'Leave', 'Transmit', 'Complete'],
+  WINS: {
+    label: '6 · Short-Term Wins',
+    hint: 'Collect proof. Small victories feed the system.',
+    verbs: ['Score', 'Claim', 'Verify', 'Celebrate', 'Bank'],
+  },
+  ACCELERATE: {
+    label: '7 · Sustain Acceleration',
+    hint: 'Don’t stop at one glitch. Keep the momentum honest.',
+    verbs: ['Accelerate', 'Stack', 'Iterate', 'Surge', 'Amplify'],
+  },
+  ANCHOR: {
+    label: '8 · Anchor the Change',
+    hint: 'Make it real enough to last. Leave a trace in the culture.',
+    verbs: ['Anchor', 'Seal', 'Institutionalize', 'Archive', 'Encode'],
   },
 }
 
 export const STORY_MOMENTS: StoryMoment[] = [
-  'ARRIVAL',
-  'CROSSROADS',
-  'ENCOUNTER',
-  'REVELATION',
-  'RITUAL',
-  'EXIT',
+  'URGENCY',
+  'COALITION',
+  'VISION',
+  'ENLIST',
+  'UNBLOCK',
+  'WINS',
+  'ACCELERATE',
+  'ANCHOR',
 ]
 
 function hashToInt(s: string): number {

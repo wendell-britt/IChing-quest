@@ -5,7 +5,16 @@ export type TrigramId = 'QIAN' | 'DUI' | 'LI' | 'ZHEN' | 'XUN' | 'KAN' | 'GEN' |
 
 export type DrawMethod = 'quick' | 'coins'
 
-export type StoryMoment = 'ARRIVAL' | 'CROSSROADS' | 'ENCOUNTER' | 'REVELATION' | 'RITUAL' | 'EXIT'
+// 8 party periods mapped to Kotter's 8-stage model
+export type StoryMoment =
+  | 'URGENCY'
+  | 'COALITION'
+  | 'VISION'
+  | 'ENLIST'
+  | 'UNBLOCK'
+  | 'WINS'
+  | 'ACCELERATE'
+  | 'ANCHOR'
 
 export interface Trigram {
   id: TrigramId
