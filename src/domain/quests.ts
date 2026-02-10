@@ -3,6 +3,7 @@ import { ARCHETYPES } from './archetypes'
 import { TRIGRAMS } from './trigrams'
 import { clampDurationSeconds, DEFAULT_MOVE_TYPE, MOVE_TYPE_MODIFIERS } from './moves'
 import { trigramForKotterStage } from './kotter'
+import { ARCHETYPE_COLUMN_MODIFIER } from './grid'
 import { newId } from './util'
 
 export const STORY_MOMENT_META: Record<
@@ -237,10 +238,15 @@ export function mintQuestFromBar(args: {
   const archetype = ARCHETYPES[archetypeId] ?? Object.values(ARCHETYPES)[0]!
   const upper = TRIGRAMS[bar.hexagram.upper]
   const lower = TRIGRAMS[bar.hexagram.lower]
-  const stageTrigram = TRIGRAMS[trigramForKotterStage(storyMoment)]
+  const stageTrigramId = trigramForKotterStage(storyMoment)
+  const stageTrigram = TRIGRAMS[stageTrigramId]
+  const archetypeTrigramId = archetype.trigram
+  const archetypeColumn = ARCHETYPE_COLUMN_MODIFIER[archetypeTrigramId]
 
   const moveType: MoveType = args.moveType ?? DEFAULT_MOVE_TYPE
-  const seed = hashToInt(`${bar.id}:${archetypeId}:${storyMoment}:${moveType}:${bar.hexagram.bits}`)
+  const seed = hashToInt(
+    `${bar.id}:${archetypeId}:${archetypeTrigramId}:${storyMoment}:${stageTrigramId}:${moveType}:${bar.hexagram.bits}`,
+  )
   const verb = pick(STORY_MOMENT_META[storyMoment].verbs, seed)
   const candidates = TEMPLATES.filter((t) => t.storyMoment === storyMoment)
   const template = pick(candidates.length ? candidates : TEMPLATES, seed)
@@ -254,18 +260,20 @@ export function mintQuestFromBar(args: {
   })
   const modifiedSteps = [
     ...steps,
+    ...(archetypeColumn.ruleAdd ?? []),
     `${mod.addRulePrefix} ${mod.addRuleSuffix ?? ''}`.trim(),
   ]
 
   const rewardVibeulons =
     template.rewardBase +
+    archetypeColumn.rewardBonus +
     mod.rewardBonus +
     Math.min(6, bar.movingLines.length) +
     (seed % 3)
 
   const title = template.title(verb)
   const caller = bar.playerLabel ? `, ${bar.playerLabel}` : ''
-  const prompt = `Operator${caller}: your BAR reads **${bar.hexagram.label}** (${upper.glyph}${lower.glyph}). Kotter anchor: ${stageTrigram.glyph} ${stageTrigram.name}. As the **${archetype.name}**, channel: ${upper.keyword} // ${lower.keyword}.`
+  const prompt = `Operator${caller}: your BAR reads **${bar.hexagram.label}** (${upper.glyph}${lower.glyph}). Kotter anchor: ${stageTrigram.glyph} ${stageTrigram.name}. Grid column: ${TRIGRAMS[archetypeTrigramId].glyph} ${TRIGRAMS[archetypeTrigramId].name}. As the **${archetype.name}**, channel: ${upper.keyword} // ${lower.keyword}.`
 
   return {
     id: newId('quest'),
@@ -274,14 +282,16 @@ export function mintQuestFromBar(args: {
     archetypeId: archetype.id,
     storyMoment,
     moveType,
+    stageTrigramId,
+    archetypeTrigramId,
     title,
     prompt,
     steps: modifiedSteps,
     mode: template.mode,
     durationSeconds: clampDurationSeconds(template.durationSeconds + mod.durationDeltaSeconds),
-    setup: template.setup,
+    setup: [...template.setup, ...(archetypeColumn.setupAdd ?? [])],
     winCondition: template.winCondition,
-    scoring: template.scoring,
+    scoring: [...template.scoring, ...(archetypeColumn.scoringAdd ?? [])],
     rewardVibeulons,
   }
 }

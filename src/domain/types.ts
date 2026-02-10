@@ -81,6 +81,9 @@ export interface QUEST {
   archetypeId: string
   storyMoment: StoryMoment
   moveType?: MoveType
+  // Grid coordinate: Kotter-stage trigram (row) × archetype trigram (column)
+  stageTrigramId?: TrigramId
+  archetypeTrigramId?: TrigramId
   title: string
   prompt: string
   // Back-compat: old quests are just "steps". New quests can also include a structured minigame spec.

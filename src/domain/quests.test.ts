@@ -28,6 +28,8 @@ describe('quests minigames', () => {
       moveType: 'CLEAN_UP',
     })
     expect(q.moveType).toBe('CLEAN_UP')
+    expect(q.stageTrigramId).toBeTruthy()
+    expect(q.archetypeTrigramId).toBeTruthy()
     expect(q.mode).toBeTruthy()
     expect(typeof q.durationSeconds).toBe('number')
     expect(Array.isArray(q.setup)).toBe(true)

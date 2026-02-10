@@ -9,6 +9,7 @@ import { formatShortTime } from './domain/util'
 import { TRIGRAMS } from './domain/trigrams'
 import { DEFAULT_MOVE_TYPE, MOVE_TYPE_META, MOVE_TYPES } from './domain/moves'
 import { trigramForKotterStage } from './domain/kotter'
+import { ARCHETYPE_COLUMN_MODIFIER, gridLabel } from './domain/grid'
 
 export default function App() {
   const [state, setState] = useState<ArtifactStateV1>(() => loadState())
@@ -289,6 +290,14 @@ export default function App() {
                     {TRIGRAMS[trigramForKotterStage(storyMoment)].name}
                   </span>
                 </div>
+                {selectedBar ? (
+                  <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/75">
+                    Grid:{' '}
+                    <span className="font-semibold text-white/90">
+                      {gridLabel(trigramForKotterStage(storyMoment), archetypeForTrigram(selectedBar.hexagram.lower).trigram)}
+                    </span>
+                  </div>
+                ) : null}
               </div>
             </div>
 
@@ -389,6 +398,11 @@ export default function App() {
                           {MOVE_TYPE_META[selectedQuest.moveType].label}
                         </span>
                       ) : null}
+                      {selectedQuest.stageTrigramId && selectedQuest.archetypeTrigramId ? (
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/75">
+                          Grid: {gridLabel(selectedQuest.stageTrigramId, selectedQuest.archetypeTrigramId)}
+                        </span>
+                      ) : null}
                       {selectedQuest.mode ? (
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/75">
                           Mode: {selectedQuest.mode.replaceAll('_', ' ')}
@@ -437,6 +451,18 @@ export default function App() {
                         <li key={i}>{s}</li>
                       ))}
                     </ul>
+                  </div>
+                ) : null}
+
+                {selectedQuest.archetypeTrigramId ? (
+                  <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-3">
+                    <div className="text-xs uppercase tracking-[0.26em] text-white/50">Grid column modifier</div>
+                    <div className="mt-1 text-sm font-semibold text-white/85">
+                      {ARCHETYPE_COLUMN_MODIFIER[selectedQuest.archetypeTrigramId].label}
+                    </div>
+                    <div className="mt-1 text-sm text-white/70">
+                      {ARCHETYPE_COLUMN_MODIFIER[selectedQuest.archetypeTrigramId].flavor}
+                    </div>
                   </div>
                 ) : null}
 
